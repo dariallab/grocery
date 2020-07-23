@@ -1,0 +1,21 @@
+{
+    "name": "Grocery with Amazon Fresh",
+    "version": "1.0",
+    "description": "The extension get list of products that you need for a week and add them to cart on https://amazon.de/",
+    "permissions": [
+        "activeTab",
+        "declarativeContent",
+        "storage",
+        "tabs"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    },
+    "page_action": {
+        "default_popup": "popup.html"
+    },
+    "manifest_version": 2
+}

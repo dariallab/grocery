@@ -1,0 +1,45 @@
+{{template "header" .}}
+
+<div class="container">
+    <div class="row">
+        <div class="col m12 s12">
+            <div class="card blue-grey darken-1">
+                <div class="card-action orange-text text-accent-2">
+                    Schedule
+                </div>
+                <div class="card-content white-text">
+                    <div class="row">
+                        <form class="col s12 schedule" action="/admin/schedule" method="post">
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input placeholder="" id="userID" type="text" name="userID" class="validate">
+                                    <label for="userID">UserID</label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input placeholder="" id="fromDate" type="text" name="fromDate" class="validate">
+                                    <label for="fromDate">FromDate</label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input placeholder="" id="toDate" type="text" name="toDate" class="validate">
+                                    <label for="fromDate">ToDate</label>
+                                </div>
+                            </div>
+                            <div class="row" id="add-recipe-to-menu-container">
+                                Menu
+                                <a id="add-recipe-to-menu" class="waves-effect waves-light btn">add a recipe to menu</a>
+                            </div>
+                            <div class="row">
+                                <button class="btn waves-effect waves-light" type="submit" name="action">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{template "footer" .}}

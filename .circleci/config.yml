@@ -1,0 +1,91 @@
+version: 2
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - lint
+      - test
+      - build:
+          requires:
+            - lint
+            - test
+      - deploy-staging:
+          requires:
+            - build
+
+jobs:
+  lint:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/dariallab/grocery
+    steps:
+      - checkout
+      - run: make lint
+
+  test:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/dariallab/grocery
+    steps:
+      - checkout
+      - run: make test
+
+  build:
+    docker:
+      - image: circleci/python:2
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install aws cli
+          command: |
+            sudo pip install awscli
+            eval $(aws ecr get-login --no-include-email --region ${AWS_REGION})
+      - run:
+          name: Build docker image and push it to aws ecr
+          command: |
+            DOCKER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grocery:${CIRCLE_BRANCH}_${CIRCLE_SHA1}
+            docker build -t grocery .
+            docker tag grocery ${DOCKER_IMAGE}
+            docker push ${DOCKER_IMAGE}
+
+
+  deploy-staging:
+    docker:
+      - image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/circle-ci-build-img:latest
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: 
+          name: Update Environment Variables
+          command: |
+            echo "export KOPS_STATE_STORE=${STAGING_KOPS_STATE_STORE}" >> $BASH_ENV
+            eval $(aws ecr get-login --no-include-email --region ${AWS_REGION})      
+      - run: 
+          name: Run DB migrations
+          command: |
+            public_ip_address=$(wget -qO- http://checkip.amazonaws.com)
+            echo "this computers public ip address is $public_ip_address"
+            aws ec2 authorize-security-group-ingress --region ${AWS_REGION} --group-id ${STAGING_AWS_RDS_SECURITY_GROUP_ID} --ip-permissions "[{\"IpProtocol\": \"tcp\", \"FromPort\": 5432, \"ToPort\": 5432, \"IpRanges\": [{\"CidrIp\": \"${public_ip_address}/32\"}]}]"
+            export PATH=$PATH:~/go/bin
+            goose -dir=.migrations fix
+            goose -dir=.migrations postgres "postgresql://${STAGING_DB_USER}:${STAGING_DB_PASSWORD}@${STAGING_DB_HOST}/${STAGING_DB_NAME}?sslmode=disable" status
+            goose -dir=.migrations postgres "postgresql://${STAGING_DB_USER}:${STAGING_DB_PASSWORD}@${STAGING_DB_HOST}/${STAGING_DB_NAME}?sslmode=disable" up
+            aws ec2 revoke-security-group-ingress --region ${AWS_REGION} --group-id ${STAGING_AWS_RDS_SECURITY_GROUP_ID} --ip-permissions "[{\"IpProtocol\": \"tcp\", \"FromPort\": 5432, \"ToPort\": 5432, \"IpRanges\": [{\"CidrIp\": \"${public_ip_address}/32\"}]}]"
+      - run:
+          name: Update service in k8s cluster
+          command: |
+            kops export kubecfg --name ${STAGING_K8S_CLUSTER_NAME}
+            PORT=${PORT} \
+            BRANCH="$(echo ${CIRCLE_BRANCH} | tr '[:upper:]' '[:lower:]')" \
+            DB_HOST=${STAGING_DB_HOST} \
+            DB_USER=${STAGING_DB_USER} \
+            DB_PASSWORD=${STAGING_DB_PASSWORD} \
+            DB_NAME=${STAGING_DB_NAME} \
+            IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grocery:${CIRCLE_BRANCH}_${CIRCLE_SHA1} \
+            envsubst < .k8s/grocery.template.yml > .k8s/grocery.yml
+            kubectl apply -n staging -f .k8s/grocery.yml

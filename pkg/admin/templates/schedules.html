@@ -1,0 +1,52 @@
+{{template "header" .}}
+
+<div class="container">
+    <div class="row">
+        <div class="col m12 s12">
+            <div class="card blue-grey darken-1">
+                <div class="card-action orange-text text-accent-2">
+                    Schedules
+                    <span class="new badge orange accent-2" data-badge-caption=""><a class="orange accent-2" href="/admin/schedule">add new</a></span>
+                    <span class="new badge orange accent-2" data-badge-caption="">{{ len .Schedules}}</span>
+                </div>
+                <div class="card-content white-text">
+
+                    {{if .Schedules}}
+                    <form>
+                        <table class="white-text bordered responsive-table wrappable">
+                            <thead>
+                                <tr>
+                                    <th>UserID</th>
+                                    <th>FromDate</th>
+                                    <th>ToDate</th>
+                                    <th>Menu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $schedule := .Schedules}}
+                                <tr>
+                                    <td>{{$schedule.UserID}}</td>
+                                    <td>{{$schedule.FromDate}}</td>
+                                    <td>{{$schedule.ToDate}}</td>
+                                    <td>
+                                        <ul>
+                                            {{range $menu := $schedule.Menu}}
+                                            <li>{{$menu.RecipeID}} {{$menu.Portion}} </li>
+                                            {{end}}
+                                        </ul>
+                                    <td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </form>
+                    {{else}}
+                    No schedules exist
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{template "footer" .}}

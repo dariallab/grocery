@@ -1,0 +1,42 @@
+{{template "header" .}}
+
+<div class="container">
+    <div class="row">
+        <div class="col m12 s12">
+            <div class="card blue-grey darken-1">
+                <div class="card-action orange-text text-accent-2">
+                    Leftovers
+                    <span class="new badge orange accent-2" data-badge-caption="">{{ len .Leftovers}}</span>
+                </div>
+                <div class="card-content white-text">
+
+                    {{if .Leftovers}}
+                    <form>
+                        <table class="white-text bordered responsive-table wrappable">
+                            <thead>
+                                <tr>
+                                    <th>ProductID</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $rewe := .Leftovers}}
+                                <tr>
+                                    <td>{{$rewe.ProductID}}</td>
+                                    <td>{{$rewe.Quantity}}</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </form>
+                    {{else}}
+                    No leftovers exist
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{template "footer" .}}

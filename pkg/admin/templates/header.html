@@ -1,0 +1,109 @@
+{{define "header"}}
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+    <style>
+        html,
+        table {
+            font-weight: 100;
+        }
+
+        td,
+        th {
+            padding: 10px 5px;
+        }
+
+        [type="checkbox"].filled-in:not(:checked)+label:after {
+            border: 1px solid #ffffff;
+        }
+
+        .card .card-action {
+            font-size: 20px;
+        }
+
+        .wrappable td img {
+            max-width: 50px;
+            max-height: 50px;
+        }
+
+        .wrappable textarea {
+            margin-top: 15px;
+        }
+
+        .template {
+            display: none;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Admin panel</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        $(function () {
+            $('select').formSelect();
+            $('#add-recipe-to-menu').click(function () {
+                var len = $('.extraRecipe').length;
+
+                var div1 = $("<div>").addClass('extraRecipe').appendTo('#add-recipe-to-menu-container');
+
+                var divSel = $("<div>").addClass('input-field col s6').appendTo(div1);
+                var sel = $("<select>")
+                    .attr("name", "recipe[]")
+                    .appendTo(divSel);
+                var newOpt = $("<option>")
+                    .attr("value", "value1")
+                    .text("value1")
+                sel.append(newOpt);
+                sel.formSelect();
+
+                var divInp = $("<div>").addClass('input-field col s6').appendTo(div1);
+                var input = $("<input>")
+                    .attr("placeholder", "")
+                    .attr("id", "portions" + len)
+                    .attr("name", "portions[]")
+                    .attr("type", "text")
+                    .appendTo(divInp)
+                var lbl = $("<label>")
+                    .attr("for", "portions" + len)
+                    .text("Portions")
+                    .appendTo(divInp);
+            });
+        });
+
+        function updateShopProduct(sel, reweID) {
+            $.post("/admin/rewe-product",
+                {
+                    reweID: reweID,
+                    productID: sel.value,
+                })
+                .done(function (data) {
+                    M.toast({ html: 'updated', displayLength: 2000, classes: 'teal lighten-1' })
+                })
+                .fail(function () {
+                    M.toast({ html: 'error', displayLength: 2000, classes: 'red lighten-2' })
+                });
+        }
+    </script>
+
+    <nav class="blue-grey darken-1">
+        <div class="nav-wrapper">
+            <a href="#">grocery</a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li class="{{if (eq .Page "rewe-products")}} active {{end}}"> <a href="/admin/rewe-products">Rewe products</a> </li>
+                <li class="{{if (eq .Page "products")}} active {{end}}"> <a href="/admin/products">Products</a> </li>
+                <li class="{{if (eq .Page "leftovers")}} active {{end}}"> <a href="/admin/leftovers">Leftovers</a> </li>
+                <li class="{{if (eq .Page "recipes")}} active {{end}}"> <a href="/admin/recipes">Recipes</a> </li>
+                <li class="{{if (eq .Page "schedules")}} active {{end}}"> <a href="/admin/schedules">Schedules</a> </li>
+                <li class="{{if (eq .Page "users")}} active {{end}}"> <a href="/admin/users">Users</a> </li>
+                <li> <a href="#!">UTC<span class="new badge" data-badge-caption=""> {{.Now | formatTime}}</span></a> </li>
+            </ul>
+        </div>
+    </nav>
+
+    {{end}}

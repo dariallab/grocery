@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  test-db:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: test-grocery
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+
+volumes:
+  test-db-data:

@@ -1,0 +1,42 @@
+version: "3"
+services:
+  api:
+      build: .
+      restart: always
+      ports:
+        - 8080:8080
+      environment:
+        PORT: 8080
+        DB_HOST: db
+        DB_USER: user
+        DB_PASSWORD: pass
+        DB_NAME: grocery
+        TLS_CERT: "/go/src/github.com/dariallab/grocery/.assets/tls/cert.pem"
+        TLS_KEY: "/go/src/github.com/dariallab/grocery/.assets/tls/key.pem"
+        AUTH_SIGNING_KEY: "auth_signing_key"
+      volumes:
+        - ./:/go/src/github.com/dariallab/grocery
+      depends_on:
+        - db
+      networks:
+        - api-network
+
+  db:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: grocery
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - api-network
+    
+networks:
+  api-network:
+
+volumes:
+  db-data:
